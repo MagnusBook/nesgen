@@ -10,14 +10,16 @@ d = "data/valid"
 for (dirpath, dirnames, filenames) in os.walk(d):
     for fname in filenames:
         try:
-            # mf = midi.MidiFile()
-            # mf.open('data/test/' + fname)
-            # mf.read()
-            # mf.close()
-            # #print(midi.translate.midiEventsToTimeSignature(mf.tracks[0][0]))
-            # midi_data = midi.translate.midiFileToStream(mf).flat
-            print(fname)
             fpath = "{}/{}".format(d, fname)
+            mf = midi.MidiFile()
+            mf.open(fpath)
+            mf.read()
+            mf.close()
+            midi_data = midi.translate.midiFileToStream(mf)
+            print('test')
+            print(midi_data.elements)
+            print(midi_data[0].elements)
+            print(fname)
             midi_data = pretty_midi.PrettyMIDI(fpath)
             if midi_data.get_end_time() < 9:
                 os.remove(fpath)
