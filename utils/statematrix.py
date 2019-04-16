@@ -18,10 +18,10 @@ class StateMatrixBuilder(object):
         length.
     """
 
-    def __init__(self, config):
-        self.lower_bound = config.lower_bound
-        self.upper_bound = config.upper_bound
-        self.quantization = config.quantization
+    def __init__(self, lower_bound, upper_bound, quantization):
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+        self.quantization = quantization
 
     def preprocess_stream(self, stream):
         """
@@ -156,12 +156,12 @@ class StateMatrixBuilderSimple(StateMatrixBuilder):
 
     def stream_to_statematrix(self, stream):
         matrices = []
-        for i, part in enumerate(stream.getElementsByClass(m21.stream.Part)):
-            matrices.append(self.part_to_statematrix(part), i)
+        for part in stream.getElementsByClass(m21.stream.Part):
+            matrices.append(self.part_to_statematrix(part))
 
         return matrices
 
-    def part_to_statematrix(self, part, part_index):
+    def part_to_statematrix(self, part):
         def fy(n): return n.pitch.ps
 
         s = part.flat
@@ -179,17 +179,6 @@ class StateMatrixBuilderSimple(StateMatrixBuilder):
             valueObjPairs = []
             if isinstance(obj, m21.note.Note):
                 valueObjPairs = [(fy(obj), obj)]
-
-            elif isinstance(obj, m21.chord.Chord):
-                values = self._extract_chord_data(fy, obj)
-                valueObjPairs = [(v, obj) for v in values]
-
-            elif isinstance(obj, m21.meter.TimeSignature):
-                if obj.numerator not in (2, 4):
-                    print("Found time signature event {}. Bailing!".format(
-                        obj.ratioString))
-                    return statematrix[:max_time]
-                continue
 
             for v, objSub in valueObjPairs:
                 numericValue = m21.common.roundToHalfInteger(v)
@@ -224,7 +213,7 @@ class StateMatrixBuilderSimple(StateMatrixBuilder):
 
         return statematrix[:max_time]
 
-    def statematrix_to_stream(self, statematrix, name='untitled'):
+    def statematrix_to_stream(self, statematrix_vector, name='untitled'):
         s = m21.stream.Score()
 
         s.insert(0, m21.metadata.Metadata())
@@ -233,6 +222,14 @@ class StateMatrixBuilderSimple(StateMatrixBuilder):
         s.metadata.date = m21.metadata.DateSingle(
             str(datetime.datetime.now().year))
 
+        for statematrix in statematrix_vector:
+            p = self.statematrix_to_part(statematrix)
+            s.append(p)
+
+        return s
+
+
+    def statematrix_to_part(self, statematrix):
         p = m21.stream.Part()
 
         for i, values in enumerate(statematrix.transpose((1, 0, 2))):
@@ -266,6 +263,5 @@ class StateMatrixBuilderSimple(StateMatrixBuilder):
                     time = time + 1
 
         p.makeMeasures(inPlace=True)
-        s.append(p)
 
-        return s
+        return p
