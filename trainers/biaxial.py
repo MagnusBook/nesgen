@@ -1,26 +1,24 @@
-from base.base_train import BaseTrain
-from tqdm import tqdm
 import numpy as np
-import tensorflow as tf
+from base.base_train import BaseTrain
+from tqdm import trange
 
 
 class Trainer(BaseTrain):
     def __init__(self, sess, model, data, config, logger):
         super(Trainer, self).__init__(sess, model, data, config, logger)
+        scores = data.get_file_paths(self.config.sm_dir)
+        split = int(len(scores) * (1- self.config.validation_split))
+        self.train_scores = scores[:split]
+        self.val_pieces = scores[split:]
 
-    def validate(self, repeat=3):
-        sub_val = []
-        for i in range(repeat):
-            sample, start = self.data.sample_sequence()
-            xIpt, xOpt = map(np.array, self.data.get_piece_segment(sample, start))
-            seed_length = int(len(xIpt) / 2)
-            val = self.sess.run(self.model.loss(xOpt[seed_length:seed_length+16], ))
+    def train(self):
+        for _ in trange(self.config.num_epochs):
+            self.train_epoch()
 
     def train_epoch(self):
-        loop = tqdm(range(self.config.num_epochs))
         losses = []
         accs = []
-        for _ in loop:
+        for _ in trange(len(scores)):
             loss, acc = self.train_step()
             losses.append(loss)
             accs.append(acc)

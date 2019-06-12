@@ -15,9 +15,4 @@ for (dirpath, dirnames, filenames) in os.walk(d):
         mf.close()
         midi_data = m21.midi.translate.midiFileToStream(mf)
         print(fname)
-        sm = StateMatrixBuilderSimple(0, 127, 16)
-        s = sm.stream_to_statematrix(midi_data)
-        n = sm.statematrix_to_stream(s)
-        f = n.flat
-        for note in f.notes:
-            print(note)
+        print(midi_data.voices)

@@ -1,5 +1,6 @@
-from base.base_model import BaseModel
 import tensorflow as tf
+from base.base_model import BaseModel
+from models.biaxial import Biaxial
 
 
 class Model(BaseModel):
@@ -11,20 +12,15 @@ class Model(BaseModel):
     def build_model(self):
         self.is_training = tf.placeholder(tf.bool)
 
-        self.x = tf.placeholder(tf.float32, shape=[None] + self.config.state_size)
-        self.y = tf.placeholder(tf.float32, shape=[None, 10])
+        self.p1_model = Biaxial(self.config, self.config.biaxial_names[0])
+        self.p2_model = Biaxial(self.config, self.config.biaxial_names[1])
+        self.tr_model = Biaxial(self.config, self.config.biaxial_names[2])
+        self.no_model = Biaxial(self.config, self.config.biaxial_names[3])
 
-        # network architecture
-        lstm = tf.contrib.rnn.BasicLSTMCell(self.config.state_size)
+        # TODO: Add composer component
 
-        with tf.name_scope("loss"):
-            self.cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.y, logits=d2))
-            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-            with tf.control_dependencies(update_ops):
-                self.train_step = tf.train.AdamOptimizer(self.config.learning_rate).minimize(self.cross_entropy, global_step=self.global_step_tensor)
-
-            correct_prediction = tf.equal(tf.argmax(d2, 1), tf.argmax(self.y, 1))
-            self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    def loss(self, labels, predictions):
+        return tf.losses.log_loss(labels, predictions)
 
     def init_saver(self):
         self.saver = tf.train.Saver(max_to_keep=self.config.max_to_keep)

@@ -154,13 +154,6 @@ class StateMatrixBuilderSimple(StateMatrixBuilder):
     def preprocess_stream(self, stream):
         return stream
 
-    def stream_to_statematrix(self, stream):
-        matrices = []
-        for part in stream.getElementsByClass(m21.stream.Part):
-            matrices.append(self.part_to_statematrix(part))
-
-        return matrices
-
     def part_to_statematrix(self, part):
         def fy(n): return n.pitch.ps
 
@@ -168,7 +161,7 @@ class StateMatrixBuilderSimple(StateMatrixBuilder):
 
         duration = max(s.highestTime, s.duration.quarterLength)
         quantization_normalized = int(self.quantization / 4)
-        duration_quantized = int(math.ceil(duration * self.quantization / 4)) + 1
+        duration_quantized = int(math.ceil(duration * quantization_normalized)) + 1
         span = self.upper_bound - self.lower_bound
 
         statematrix = np.zeros(

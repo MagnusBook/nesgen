@@ -4,6 +4,7 @@ import tensorflow as tf
 class BaseModel:
     def __init__(self, config):
         self.config = config
+        self.name = "Undefined"
         self.saver = None
         self.init_global_step()
         self.init_current_epoch()

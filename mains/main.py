@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-# from data_loader.data_loader import DataLoader
+from data_loader.data_loader import DataLoader
 from models.biaxial import Biaxial
 from trainers.trainer import Trainer
 from utils.config import process_config
@@ -19,8 +19,11 @@ def main():
         exit(0)
 
     create_dirs([config.summary_dir, config.checkpoint_dir])
-    sess = tf.Session()
-    # data = DataLoader(config)
+    #sess = tf.Session()
+    print("Loading dataset")
+    data = DataLoader(config, args.preprocess)
+    print("Finished loading dataset")
+    data.next_batch()
     model = Biaxial(config)
     logger = Logger(sess, config)
     trainer = Trainer(sess, model, data, config, logger)
